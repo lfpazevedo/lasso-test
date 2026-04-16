@@ -1,19 +1,16 @@
 # Lasso Coefficient Comparison
 
-A small Python project that simulates time-series data and runs LASSO regression using both **scikit-learn** and **R's `glmnet` package** (via `rpy2`).
+A small Python project that simulates **many time-series features** and runs LASSO regression using both **scikit-learn** and **R's `glmnet` package** (via `rpy2`).
 
 It includes:
-- A **command-line script** (`main.py`) that fits and evaluates the R model.
+- A **command-line script** (`main.py`) that fits and evaluates the R model on a panel of simulated series.
 - An interactive **Streamlit app** (`app.py`) that lets you compare coefficients and predictions side-by-side.
 
-## Why this exists
+## What it does
 
-Comparing scikit-learn and `glmnet` can be tricky because the two libraries use different defaults for standardization and penalty parametrization. This project fixes those parameters so both solvers receive the **exact same objective function**, making the coefficient comparison truly apples-to-apples.
+Instead of using lagged values of a single time series, this project simulates **many independent time-series features** (`x1`, `x2`, ..., `xN`). Only a random subset of them are truly informative — the rest are noise. LASSO's job is to identify the informative series and shrink the rest to exactly zero.
 
-Key matching decisions in the app:
-- **Shared penalty** (`alpha` / `lambda`) controlled by a single sidebar widget.
-- **`standardize = FALSE`** in `glmnet` to match scikit-learn's default behavior (no automatic feature scaling).
-- `alpha = 1` in `glmnet` to enforce a pure L1 (LASSO) penalty, identical to scikit-learn's `Lasso`.
+Both scikit-learn and `glmnet` are configured with the **same penalty** and **no automatic standardization**, so the coefficient comparison is truly apples-to-apples.
 
 ## Prerequisites
 
@@ -65,7 +62,8 @@ lasso-test/
 ├── pyproject.toml       # uv project manifest
 ├── README.md            # this file
 ├── main.py              # CLI script (rpy2 + glmnet only)
-└── app.py               # Streamlit comparison app (sklearn vs glmnet)
+├── app.py               # Streamlit comparison app (sklearn vs glmnet)
+└── uv.lock              # uv lockfile
 ```
 
 ## Usage
@@ -73,11 +71,11 @@ lasso-test/
 ### 1. Command-line script (`main.py`)
 
 Runs a quick end-to-end pipeline:
-1. Simulates a time series (trend + seasonality + noise).
-2. Builds lag features.
+1. Simulates `n_features` time-series (AR processes).
+2. Randomly selects `n_informative` of them to drive the target `y`.
 3. Splits train / test temporally.
-4. Fits LASSO via **R `glmnet`** using cross-validation (`lambda.1se`).
-5. Prints evaluation metrics and top coefficients.
+4. Fits LASSO via **R `glmnet`** with a fixed penalty.
+5. Prints evaluation metrics, true-positive count, and top coefficients.
 
 ```bash
 uv run main.py
@@ -85,11 +83,14 @@ uv run main.py
 
 Example output:
 ```
-Non-zero coefficients: 8/20
-Intercept: 1.1706
-MSE:  7.4183
-MAE:  2.2432
-R^2:  0.8547
+Informative series: ['series_12', 'series_22', 'series_14', 'series_11', 'series_19']
+Non-zero coefficients: 10/50
+Intercept: -0.0071
+MSE:  1.1705
+MAE:  0.8948
+R^2:  0.9546
+True positives: 5/5
+False positives: 5
 ```
 
 ### 2. Streamlit comparison app (`app.py`)
@@ -103,9 +104,14 @@ uv run streamlit run app.py
 Then open [http://localhost:8501](http://localhost:8501) in your browser.
 
 **What you'll see:**
-- **Sidebar controls** for the simulation (samples, lags, noise, trend, seasonality) and a shared penalty slider.
+- **Sidebar controls** for the simulation:
+  - `Samples` – length of each time series
+  - `Number of X series` – total features generated
+  - `Informative series` – how many truly affect `y`
+  - `Noise σ` and `Random seed`
+- **Shared penalty slider** that controls `alpha` for both models.
 - **Metrics cards** (MSE, MAE, R², non-zero count) for both scikit-learn and R glmnet.
-- **Interactive coefficient chart** comparing every lag coefficient + intercept.
+- **Interactive coefficient chart** comparing ground-truth coefficients against scikit-learn and R glmnet estimates.
 - **Coefficient table** with exact values and differences.
 - **Prediction preview** plotting actual vs. predicted values on the first 20 test points.
 
@@ -125,4 +131,3 @@ Because the app runs inside Streamlit's threaded server, the R execution is wrap
 ## License
 
 MIT (or whatever you prefer — this is a demo project).
-# lasso-test
