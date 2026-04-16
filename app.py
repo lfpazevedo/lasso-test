@@ -163,12 +163,14 @@ def main():
     st.divider()
     st.subheader("📊 Coefficient Comparison")
 
+    true_series = pd.Series(true_coefs, index=X.columns)
+    true_series["Intercept"] = 0.0
+
     comp_df = pd.DataFrame({
-        "Feature": sk_result["coefs"].index,
-        "sklearn": sk_result["coefs"].values,
-        "glmnet": r_result["coefs"].values,
-        "true": np.append(0, true_coefs),  # intercept has no ground-truth coef
-    })
+        "sklearn": sk_result["coefs"],
+        "glmnet": r_result["coefs"],
+        "true": true_series,
+    }).reset_index().rename(columns={"index": "Feature"})
     comp_df = comp_df.reindex(comp_df["true"].abs().sort_values(ascending=False).index)
 
     fig = go.Figure()
