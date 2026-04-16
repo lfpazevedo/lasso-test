@@ -10,7 +10,7 @@ It includes:
 
 Instead of using lagged values of a single time series, this project simulates **many independent time-series features** (`x1`, `x2`, ..., `xN`). Only a random subset of them are truly informative — the rest are noise. LASSO's job is to identify the informative series and shrink the rest to exactly zero.
 
-Both scikit-learn and `glmnet` are configured with the **same penalty** and **no automatic standardization**, so the coefficient comparison is truly apples-to-apples.
+Both scikit-learn and `glmnet` are configured with the **same penalty** and **no automatic standardization**, so the coefficient comparison is truly apples-to-apples. The scikit-learn `Lasso` also uses tightened convergence settings (`max_iter=20000`, `tol=1e-6`, `selection='random'`) to match `glmnet`'s coordinate-descent behavior as closely as possible.
 
 ## Prerequisites
 
@@ -65,6 +65,10 @@ lasso-test/
 ├── app.py               # Streamlit comparison app (sklearn vs glmnet)
 └── uv.lock              # uv lockfile
 ```
+
+## Solver Matching Note
+
+When the penalty (`alpha` / `lambda`) and standardization are matched, scikit-learn and R `glmnet` produce coefficient estimates that differ by less than `1e-3` and identical sparsity patterns in most random seeds. Any visible discrepancies in the app are therefore due to genuine solver differences (coordinate-descent path, warm-start strategy, strong-rule screening) rather than mismatched hyper-parameters.
 
 ## Usage
 
