@@ -39,8 +39,8 @@ def simulate_many_series(n_samples=500, n_features=50, n_informative=5, noise_st
 
 
 def run_sklearn_lasso(X_train, y_train, X_test, y_test, alpha=0.1):
-    # Improved convergence settings to better match glmnet's coordinate descent behavior
-    model = Lasso(alpha=alpha, max_iter=20000, tol=1e-6, selection="random", random_state=42)
+    # Tight convergence settings; cyclic coordinate descent is deterministic and closer to glmnet
+    model = Lasso(alpha=alpha, max_iter=20000, tol=1e-6, selection="cyclic")
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
     coefs = pd.Series(model.coef_, index=X_train.columns, name="Coefficient")
@@ -149,7 +149,7 @@ def main():
         m2.metric("MAE", f"{sk_result['mae']:.4f}")
         m3.metric("R²", f"{sk_result['r2']:.4f}")
         m4.metric("Non-zero", f"{sk_result['nonzero']}/{n_features}")
-        st.caption("Sklearn: max_iter=20k, tol=1e-6, selection='random'")
+        st.caption("Sklearn: max_iter=20k, tol=1e-6, selection='cyclic'")
     with col2:
         st.subheader("🇷 R glmnet (lambda = Penalty)")
         m1, m2, m3, m4 = st.columns(4)
