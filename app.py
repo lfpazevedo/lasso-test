@@ -197,14 +197,14 @@ def main():
         template="plotly_white",
         height=600,
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # Table
     st.subheader("📋 Coefficient Table")
     comp_df["Difference"] = comp_df["sklearn"] - comp_df["glmnet"]
     st.dataframe(
         comp_df.style.format({"sklearn": "{:,.4f}", "glmnet": "{:,.4f}", "true": "{:,.4f}", "Difference": "{:,.4f}"}),
-        use_container_width=True,
+        width="stretch",
     )
 
     # Prediction preview
@@ -220,7 +220,7 @@ def main():
     fig2.add_trace(go.Scatter(y=preview["sklearn"], mode="lines+markers", name="scikit-learn", line=dict(color="#636EFA", width=2)))
     fig2.add_trace(go.Scatter(y=preview["glmnet"], mode="lines+markers", name="R glmnet", line=dict(color="#EF553B", width=2)))
     fig2.update_layout(template="plotly_white", height=400, xaxis_title="Index", yaxis_title="Value")
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width="stretch")
 
 
 if __name__ == "__main__":
